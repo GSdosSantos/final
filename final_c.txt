@@ -1,0 +1,93 @@
+#include "pico/stdlib.h"
+#include "hardware/pwm.h"
+#include "hardware/adc.h"
+
+// Define os pinos
+#define BUZZER_PIN 21
+#define MIC_PIN 28
+
+// Configurações do ADC
+#define ADC_CHANNEL 2 // Canal ADC para o GPIO 28 (ADC2)
+#define ADC_RANGE 4096 // Resolução do ADC (12 bits)
+
+// Função para tocar uma nota no buzzer
+void play_note(uint32_t frequency, uint32_t duration_ms) {
+    if (frequency == 0) {
+        pwm_set_gpio_level(BUZZER_PIN, 0); // Desliga o buzzer
+    } else {
+        // Configura o PWM para a frequência desejada
+        uint32_t slice_num = pwm_gpio_to_slice_num(BUZZER_PIN);
+        uint32_t channel = pwm_gpio_to_channel(BUZZER_PIN);
+        uint32_t clock = 125000000; // Clock base do RP2040 (125 MHz)
+        uint32_t divider = clock / (frequency * 1000); // Calcula o divisor
+        pwm_set_clkdiv(slice_num, divider);
+        pwm_set_wrap(slice_num, 1000); // Define o wrap (ciclo de trabalho)
+        pwm_set_chan_level(slice_num, channel, 500); // 50% de duty cycle
+        pwm_set_enabled(slice_num, true); // Habilita o PWM
+    }
+    sleep_ms(duration_ms); // Mantém a nota por um tempo
+    pwm_set_gpio_level(BUZZER_PIN, 0); // Desliga o buzzer
+}
+
+// Função para ler o sinal do microfone
+uint16_t read_microphone() {
+    return adc_read(); // Lê o valor do ADC
+}
+
+// Função para processar o sinal (aqui você pode adicionar filtros ou técnicas de melhoria)
+uint16_t process_audio(uint16_t input) {
+    // Exemplo simples: Aplica um ganho de 2x ao sinal (ajuste conforme necessário)
+    uint16_t output = input * 2;
+    if (output > ADC_RANGE - 1) output = ADC_RANGE - 1; // Limita o valor máximo
+    return output;
+}
+
+// Função para tocar a música "Für Elise"
+void play_fur_elise() {
+    // Define as notas e durações para o trecho de "Für Elise"
+    uint32_t notes[] = {
+        659, 622, 659, 622, 659, 494, 587, 523, 440, 0, 262, 330, 440, 494, 0, 523, 494,
+        440, 494, 523, 440, 494, 523, 587, 659, 0, 659, 622, 659, 622, 659, 494, 587, 523,
+        440, 0, 262, 330, 440, 494, 0, 523, 494, 440, 494, 523, 440, 494, 523, 587, 659
+    };
+    uint32_t durations[] = {
+        200, 200, 200, 200, 200, 200, 200, 200, 400, 200, 200, 200, 200, 400, 200, 400, 400,
+        200, 200, 200, 200, 200, 200, 200, 400, 200, 200, 200, 200, 200, 200, 200, 200, 400,
+        200, 200, 200, 200, 200, 400, 200, 400, 400, 200, 200, 200, 200, 200, 200, 200, 400
+    };
+
+    // Toca a música
+    for (int i = 0; i < sizeof(notes) / sizeof(notes[0]); i++) {
+        play_note(notes[i], durations[i]);
+        sleep_ms(50); // Pequena pausa entre as notas
+    }
+}
+
+// Função principal
+int main() {
+    // Inicializa o GPIO do buzzer
+    gpio_set_function(BUZZER_PIN, GPIO_FUNC_PWM);
+
+    // Inicializa o ADC
+    adc_init();
+    adc_gpio_init(MIC_PIN);
+    adc_select_input(ADC_CHANNEL);
+
+    // Loop principal
+    while (true) {
+        // Toca o trecho de "Für Elise"
+        play_fur_elise();
+
+        // Lê o sinal do microfone e aplica a realimentação
+        uint16_t mic_value = read_microphone();
+        uint16_t processed_value = process_audio(mic_value);
+
+        // Converte o valor processado em uma frequência para o buzzer
+        uint32_t frequency = (processed_value * 1000) / ADC_RANGE; // Escala para 0-1000 Hz
+
+        // Toca a frequência no buzzer como realimentação
+        play_note(frequency, 10); // Toca por 10 ms (ajuste conforme necessário)
+    }
+
+    return 0;
+}
