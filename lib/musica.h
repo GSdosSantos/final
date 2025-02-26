@@ -104,4 +104,16 @@ uint32_t tamnote[10] = {
     39, // Super Mario Bros
     35  // Pirates of the Caribbean
 };
+const char *nomes[10] = {
+    "FUR ELISE",
+    "TWINKLE TWINKLE LITTLE STAR",
+    "HAPPY BIRTHDAY",
+    "MARIO THEME",
+    "STAR WARS THEME",
+    "JINGLE BELLS",
+    "ODE TO JOY",
+    "CANON IN D",
+    "SUPER MARIO BROS",
+    "PIRATES OF THE CARIBBEAN"
+};
 #endif

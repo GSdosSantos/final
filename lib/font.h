@@ -67,8 +67,9 @@ static uint8_t font[] = {
 0x00, 0x38, 0xa0, 0xa0, 0xf8, 0x00, 0x00, 0x00, // y
 0x00, 0x48, 0x68, 0x58, 0x48, 0x00, 0x00, 0x00, // z
 
+
 };
-char letras[] = {
+static char letra[] = {
     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 
     'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 
